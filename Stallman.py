@@ -1,10 +1,14 @@
-import time
-import discord
 import asyncio
-import urbandictionary as ud
-import sys
 import json
+import random
+import sys
+import time
+from urllib.parse import quote as urlquote
+from urllib.request import urlopen
+
+import discord
 import requests
+import urbandictionary as ud
 from bs4 import BeautifulSoup
 
 client = discord.Client()
@@ -29,15 +33,10 @@ async def on_message(message):
         await client.edit_message(pinger, ":ping_pong: **Pong !**\n `Latence : " + ping + " ms`" )
 
 # UrbanDictionary
-UD_DEFID_URL = 'https://api.urbandictionary.com/v0/define?defid='
-UD_DEFINE_URL = 'https://api.urbandictionary.com/v0/define?term='
-UD_RANDOM_URL = 'https://api.urbandictionary.com/v0/random'
+        UD_DEFID_URL = 'https://api.urbandictionary.com/v0/define?defid='
+        UD_DEFINE_URL = 'https://api.urbandictionary.com/v0/define?term='
+        UD_RANDOM_URL = 'https://api.urbandictionary.com/v0/random'
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
-    
     elif message.content == "!urban":
         class UrbanDefinition(object):
             def __init__(self, word, definition, example, upvotes, downvotes):
@@ -65,7 +64,7 @@ async def on_message(message):
         def _parse_urban_json(json, check_result=True):
             result = []
             if json is None or any(e in json for e in ('error', 'errors')):
-                raise ValueException('UD: Invalid input for Urban Dictionary API')
+                raise ValueError('UD: Invalid input for Urban Dictionary API')
             if check_result and ('list' not in json or len(json['list']) == 0):
                 return result
             for definition in json['list']:
