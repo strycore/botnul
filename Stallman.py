@@ -13,8 +13,6 @@ from bs4 import BeautifulSoup
 
 client = discord.Client()
 
-@client.event
-
 # Mise en route
 async def on_ready():
     print("Logged in as:", client.user.name)
@@ -32,12 +30,17 @@ async def on_message(message):
         ping = '%.2f' % ( 1000 * (time.monotonic() - timePing))
         await client.edit_message(pinger, ":ping_pong: **Pong !**\n `Latence : " + ping + " ms`" )
 
+# Hello
+
+    elif message.content == "!hello":
+        await client.send_message(message.channel, "Hello!")
+
 # UrbanDictionary
+      
+    elif message.content == "!urban":
         UD_DEFID_URL = 'https://api.urbandictionary.com/v0/define?defid='
         UD_DEFINE_URL = 'https://api.urbandictionary.com/v0/define?term='
         UD_RANDOM_URL = 'https://api.urbandictionary.com/v0/random'
-
-    elif message.content == "!urban":
         class UrbanDefinition(object):
             def __init__(self, word, definition, example, upvotes, downvotes):
                 self.word = word
@@ -78,7 +81,7 @@ async def on_message(message):
                 result.append(d)
             return result
 
-        def define(term):
+        '''def define(term):
             """Search for term/phrase and return list of UrbanDefinition objects.
             Keyword arguments:
             term -- term or phrase to search for (str)
@@ -97,7 +100,7 @@ async def on_message(message):
         def random():
             """Return random definitions as a list of UrbanDefinition objects."""
             json = _get_urban_json(UD_RANDOM_URL)
-        return _parse_urban_json(json, check_result=False)
-
+        return _parse_urban_json(json, check_result=False)'''
+        
 # ID
 client.run("NTQzNDQ5Nzk3NDc5MTA0NTEy.XKeXJA.ZkhDIMixUjuJMG2VvWskRSOeK-Q")
