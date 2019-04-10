@@ -11,6 +11,26 @@ import requests
 import urbandictionary as ud
 from bs4 import BeautifulSoup
 
+UD_DEFID_URL = 'https://api.urbandictionary.com/v0/define?defid='
+UD_DEFINE_URL = 'https://api.urbandictionary.com/v0/define?term='
+UD_RANDOM_URL = 'https://api.urbandictionary.com/v0/random'
+class UrbanDefinition(object):
+    def __init__(self, word, definition, example, upvotes, downvotes):
+        self.word = word
+        self.definition = definition
+        self.example = example
+        self.upvotes = upvotes
+        self.downvotes = downvotes
+
+    def __str__(self):
+        return '%s: %s%s (%d, %d)' % (
+                self.word,
+                self.definition[:50],
+                '...' if len(self.definition) > 50 else '',
+                self.upvotes,
+                self.downvotes
+            )
+
 client = discord.Client()
 
 # Mise en route
@@ -38,36 +58,18 @@ async def on_message(message):
 # UrbanDictionary
       
     elif message.content == "!urban":
-        UD_DEFID_URL = 'https://api.urbandictionary.com/v0/define?defid='
-        UD_DEFINE_URL = 'https://api.urbandictionary.com/v0/define?term='
-        UD_RANDOM_URL = 'https://api.urbandictionary.com/v0/random'
-        class UrbanDefinition(object):
-            def __init__(self, word, definition, example, upvotes, downvotes):
-                self.word = word
-                self.definition = definition
-                self.example = example
-                self.upvotes = upvotes
-                self.downvotes = downvotes
-
-            def __str__(self):
-                return '%s: %s%s (%d, %d)' % (
-                        self.word,
-                        self.definition[:50],
-                        '...' if len(self.definition) > 50 else '',
-                        self.upvotes,
-                        self.downvotes
-                    )
-
+        
+        
         def _get_urban_json(url):
             f = urlopen(url)
             data = json.loads(f.read().decode('utf-8'))
             f.close()
             return data
-
+        
         def _parse_urban_json(json, check_result=True):
             result = []
             if json is None or any(e in json for e in ('error', 'errors')):
-                raise ValueError('UD: Invalid input for Urban Dictionary API')
+                raise AttributeError('UD: Invalid input for Urban Dictionary API')
             if check_result and ('list' not in json or len(json['list']) == 0):
                 return result
             for definition in json['list']:
