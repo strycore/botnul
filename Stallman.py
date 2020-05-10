@@ -12,19 +12,19 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 
 bot = commands.Bot(command_prefix='!')
-client = discord.Client()
 
-@client.event
+
+@bot.event
 async def on_ready():
     game = discord.Game('Attends que Yιѕнαи le code')
-    await client.change_presence(status=discord.Status.online,activity=game)
+    await bot.change_presence(status=discord.Status.online,activity=game)
 
-    for guild in client.guilds:
+    for guild in bot.guilds:
         if guild.name == GUILD:
             break
 
     print(
-        f'{client.user} est connecté sur le discord suivant : \n'
+        f'{bot.user} est connecté sur le discord suivant : \n'
         f'{guild.name}(id: {guild.id})\n'
     )
 
@@ -35,5 +35,5 @@ async def ping(ctx):
     response = (test_ping)
     await ctx.send(response)
 
-client.run(TOKEN)
+
 bot.run(TOKEN)
