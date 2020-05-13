@@ -1,14 +1,16 @@
-    # stallman.py
-    # Bot discord de yishan
+# stallman.py
+# Bot discord de yishan
 
 import os
 import discord
 import urllib
 import json 
 import urbandictionary as ud
+import random
 
 from dotenv import load_dotenv
 from discord.ext import commands
+from quote import list_quotes # quotes personnelles
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -45,19 +47,16 @@ async def urbandef(ctx, term: str):
 # C'est ici que tu vas interpreter les résultat pour les afficher corectement
     for r in result:
         await ctx.send(r.definition)
+        print(r)
 
-''' test
+# test
 @bot.command(name='urban2', help='Urban Dictionary')
-async def urbandef2(ctx, term: str): # term est forcément un string ici
-	result = await ud.define(term)
-    
-	# C'est ici que je dois interpreter les résultat pour les afficher correctement
-	output = ''
-	for r in result: #on cherche pas sur un élément du tableau, mais sur le tableau en entier
-		output += ''.join(r.definition)
-        
-	await ctx.send(output)
-'''
+async def urbandef2(ctx, term: str): 
+    result = ud.random()
+    for r in result:
+        print(r)
+        await ctx.send(r.definition)
+
 
 @bot.command(name='echo', help='Répète Jacot')
 async def echo(ctx, phrase): # phrase est ici la variable qui recevra les mots à répeter
@@ -69,5 +68,13 @@ async def echo(ctx, phrase): # phrase est ici la variable qui recevra les mots �
 async def square(ctx, number: int):
     result = number * number
     await ctx.send('le résultat est {}'.format(result))
+
+# Quotes
+
+
+@bot.command(name='quote', help='Choisi et affiche au hazard une citation du chan')
+async def show_random_quote(ctx):
+    quote = random.choice(list_quotes)
+    await ctx.send(quote)
 
 bot.run(TOKEN)
