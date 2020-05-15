@@ -71,10 +71,16 @@ async def square(ctx, number: int):
 
 # Quotes
 
-
 @bot.command(name='quote', help='Choisi et affiche au hazard une citation du chan')
 async def show_random_quote(ctx):
     quote = random.choice(list_quotes)
-    await ctx.send(quote)
+    embed=discord.Embed(title="Quote", color=0x2b2a59)
+    embed.set_thumbnail(url="https://share.yishan.io/images/troll_memes_bullshits/elliot.jpg")
+    embed.add_field(name='_', value=quote)
+    print(embed)
+    await ctx.send(embed = embed)
+
+    
+
 
 bot.run(TOKEN)
