@@ -4,9 +4,8 @@ import json
 from urllib.request import urlopen
 from urllib.parse import quote as urlquote
 
-UD_DEFID_URL = 'https://api.urbandictionary.com/v0/define?defid='
 UD_DEFINE_URL = 'https://api.urbandictionary.com/v0/define?term='
-UD_RANDOM_URL = 'https://api.urbandictionary.com/v0/random'
+
 
 class UrbanDefinition(object):
     def __init__(self, word, definition, example, upvotes, downvotes):
@@ -17,10 +16,11 @@ class UrbanDefinition(object):
         self.downvotes = downvotes
 
     def __str__(self):
-        return '%s: %s%s (%d, %d)' % (
+        return '%s: %s%s %s (%d, %d)' % (
                 self.word,
                 self.definition[:50],
                 '...' if len(self.definition) > 50 else '',
+                self.example,
                 self.upvotes,
                 self.downvotes
             )
@@ -55,16 +55,3 @@ def define(term):
     """
     json = _get_urban_json(UD_DEFINE_URL + urlquote(term))
     return _parse_urban_json(json)
-
-def defineID(defid):
-    """Search for UD's definition ID and return list of UrbanDefinition objects.
-    Keyword arguments:
-    defid -- definition ID to search for (int or str)
-    """
-    json = _get_urban_json(UD_DEFID_URL + urlquote(str(defid)))
-    return _parse_urban_json(json)
-
-def random():
-    """Return random definitions as a list of UrbanDefinition objects."""
-    json = _get_urban_json(UD_RANDOM_URL)
-    return _parse_urban_json(json, check_result=False)
