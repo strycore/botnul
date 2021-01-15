@@ -1,7 +1,6 @@
-# stallman.py
-# Bot discord de yishan
-
+"""Bot discord de yishan"""
 import os
+import logging
 
 import random
 
@@ -11,83 +10,86 @@ from dotenv import load_dotenv
 import urbandictionary as ud
 from quote import list_quotes  # quotes personnelles
 
+logging.basicConfig(level=logging.DEBUG)
+LOGGER = logging.getLogger('discord')
+LOGGER.setLevel(logging.DEBUG)
+
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
-GUILD = os.getenv("DISCORD_GUILD")
 
-bot = commands.Bot(command_prefix="!")
-
-
-@bot.event
-async def on_ready():
-    game = discord.Game("un pingouin qui fait du ski.")
-    await bot.change_presence(status=discord.Status.online, activity=game)
-
-    for guild in bot.guilds:
-        if guild.name == GUILD:
-            print(
-                f"{bot.user} est connecté sur le discord suivant : \n"
-                f"{guild.name}(id: {guild.id})\n"
-            )
+CENSORED = (
+    "tg",
+    "ta gueule",
+    "tg pour voir",
+    "ftg"
+)
 
 
-@bot.command(name="ping", help="réponds au ping")
-async def ping(ctx):
-    test_ping = "pong"
 
-    response = test_ping
-    await ctx.send(response)
+class BotClient(discord.Client):
+    """Discord bot client"""
+
+    async def on_ready(self):
+        """The Discord client is ready"""
+        game = discord.Game("un pingouin qui fait du ski.")
+        await self.change_presence(status=discord.Status.online, activity=game)
+
+    async def on_message(self, message):
+        """Handle received messages"""
+        bot_commands = {
+            "!ping": self.ping,
+            "!urban": self.urbandef,
+            "!echo": self.echo,
+            "!help": self.rtfm,
+            "!rtfm": self.rtfm
+        }
+        command = message.content.split()[0]
+        if command in bot_commands:
+            await bot_commands[command](message.channel, message.content[len(command) + 1:])
+        if message.content.strip().lower() in CENSORED:
+            await message.delete()
+
+    async def ping(self, channel, _payload):
+        """Sends pong"""
+        await channel.send("pong")
+
+    async def urbandef(self, channel, term):
+        """Cherche une def sur Urban"""
+        response = ud.define(term)
+        if not response:
+            await channel.send("Ça existe pas ta merde.")
+            return
+        response = response[0]
+        response.definition = response.definition.replace("[", "**")
+        response.definition = response.definition.replace("]", "**")
+        response.example = response.example.replace("[", "**")
+        response.example = response.example.replace("]", "**")
+        embed = discord.Embed(title=term, color=0x0392E1)
+        if len(response.definition) > 1000:
+            concat = response.definition[:995] + "\n**[...]**"
+        else:
+            concat = response.definition
+
+        embed.add_field(name="**definition** :\n", value=concat, inline=False)
+        embed.add_field(name="**example** :\n", value=response.example)
+        embed.set_thumbnail(url="https://share.yishan.io/images/ud.jpg")
+        await channel.send(embed=embed)
+
+    async def echo(self, channel, phrase):
+        """Repète Jacquot"""
+        await channel.send(phrase + " ducon")
+
+    async def show_random_quote(self, channel, _rien):
+        """Balance une quote random"""
+        quote = random.choice(list_quotes)
+        embed = discord.Embed(title="Quote", description=quote, color=0x0392E1)
+        embed.set_thumbnail(url="https://share.yishan.io/images/quote.png")
+        await channel.send(embed=embed)
+
+    async def rtfm(self, channel, _payload):
+        """Fuck you"""
+        await channel.send("RTFM!")
 
 
-# UD
-
-
-@bot.command(name="urban", help="Urban Dictionary")
-async def urbandef(ctx, term):
-    r = ud.define(term)[0]
-    r.definition = r.definition.replace("[", "**")
-    r.definition = r.definition.replace("]", "**")
-    r.example = r.example.replace("[", "**")
-    r.example = r.example.replace("]", "**")
-    embed = discord.Embed(title=term, color=0x0392E1)
-    if len(r.definition) > 1000:
-        concat = r.definition[:995] + "\n**[...]**"
-    else:
-        concat = r.definition
-
-    embed.add_field(name="**definition** :\n", value=concat, inline=False)
-    embed.add_field(name="**example** :\n", value=r.example)
-    embed.set_thumbnail(url="https://share.yishan.io/images/ud.jpg")
-    await ctx.send(embed=embed)
-    print(r)
-
-
-# echo
-
-
-@bot.command(name="echo", help="Répète Jacot")
-async def echo(ctx, phrase):
-    await ctx.send(phrase + "ducon")
-
-
-# Square
-
-
-@bot.command(name="square", help="Calcule le carré d'un nombre")
-async def square(ctx, number: int):
-    result = number * number
-    await ctx.send("le résultat est {}".format(result))
-
-
-# Quotes
-
-
-@bot.command(name="quote", help="Choisi et affiche au hazard une citation du chan")
-async def show_random_quote(ctx):
-    quote = random.choice(list_quotes)
-    embed = discord.Embed(title="Quote", description=quote, color=0x0392E1)
-    embed.set_thumbnail(url="https://share.yishan.io/images/quote.png")
-    await ctx.send(embed=embed)
-
-
-bot.run(TOKEN)
+DISCORD_NUL_BOT = BotClient()
+DISCORD_NUL_BOT.run(TOKEN)
