@@ -61,20 +61,19 @@ class BotClient(discord.Client):
         if not words:
             return
         sentence = message.content.strip().lower()
-        if sentence in CENSORED_SENTENCES:
-            await message.delete()
-            return
-        for word in words:
-            if word in CENSORED_WORDS:
-                await message.delete()
-                return
+        # if sentence in CENSORED_SENTENCES:
+        #     await message.delete()
+        #     return
+        # for word in words:
+        #     if word in CENSORED_WORDS:
+        #         await message.delete()
+        #         return
         command = message.content.split()[0]
         if command in bot_commands:
             await bot_commands[command](message.channel, message.content[len(command) + 1:])
 
-    @tasks.loop(hours=24) # task runs every 60 seconds
+    @tasks.loop(hours=24)
     async def say_yo(self):
-        """Wait until the bot logs in"""
         channel = self.get_channel(MAIN_ID)
         await channel.send("yo")
 
