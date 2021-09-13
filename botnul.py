@@ -55,7 +55,8 @@ class BotClient(discord.Client):
             # "!quote": self.show_random_quote
             "yo": self.reply_yo
         }
-        MESSAGE_LOGGER.info("%s: %s", message.user, message.content)
+        MESSAGE_LOGGER.info("%s: %s", message, message.content)
+        print(message)
         words = re.findall(r'\w+', message.content)
         if not words:
             return
