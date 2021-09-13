@@ -53,7 +53,7 @@ class BotClient(discord.Client):
             # "!help": self.rtfm,
             # "!rtfm": self.rtfm,
             # "!quote": self.show_random_quote
-            "yo": self.reply_yo
+            # "yo": self.reply_yo
         }
         MESSAGE_LOGGER.info("%s: %s", message, message.content)
         print(message)
