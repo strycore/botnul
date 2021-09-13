@@ -37,7 +37,7 @@ class BotClient(discord.Client):
     """Discord bot client"""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.say_yo.start()
+        # self.say_yo.start()
 
     async def on_ready(self):
         """The Discord client is ready"""
