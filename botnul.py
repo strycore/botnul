@@ -6,18 +6,21 @@ import logging
 import random
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from dotenv import load_dotenv
 import urbandictionary as ud
 from quote import QUOTES  # quotes personnelles
 
 logging.basicConfig(level=logging.DEBUG)
 LOGGER = logging.getLogger('discord')
-LOGGER.setLevel(logging.DEBUG)
+LOGGER.setLevel(logging.INFO)
+MESSAGE_LOGGER = logging.getLogger(__name__)
+MESSAGE_HANDLER = logging.FileHandler('devnull.log')
+MESSAGE_LOGGER.addHandler(MESSAGE_HANDLER)
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
-
+MAIN_ID = 449724925725376513
 CENSORED_SENTENCES = (
     "ta gueule",
 )
@@ -32,6 +35,9 @@ CENSORED_WORDS = (
 
 class BotClient(discord.Client):
     """Discord bot client"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.say_yo.start()
 
     async def on_ready(self):
         """The Discord client is ready"""
@@ -41,14 +47,15 @@ class BotClient(discord.Client):
     async def on_message(self, message):
         """Handle received messages"""
         bot_commands = {
-            "!ping": self.ping,
-            "!urban": self.urbandef,
-            "!echo": self.echo,
-            "!help": self.rtfm,
-            "!rtfm": self.rtfm,
-            "!quote": self.show_random_quote
+            # "!ping": self.ping,
+            # "!urban": self.urbandef,
+            # "!echo": self.echo,
+            # "!help": self.rtfm,
+            # "!rtfm": self.rtfm,
+            # "!quote": self.show_random_quote
+            "yo": self.reply_yo
         }
-
+        MESSAGE_LOGGER.info("%s: %s", message.user, message.content)
         words = re.findall(r'\w+', message.content)
         if not words:
             return
@@ -64,6 +71,20 @@ class BotClient(discord.Client):
         if command in bot_commands:
             await bot_commands[command](message.channel, message.content[len(command) + 1:])
 
+    @tasks.loop(hours=24) # task runs every 60 seconds
+    async def say_yo(self):
+        """Wait until the bot logs in"""
+        channel = self.get_channel(MAIN_ID)
+        await channel.send("yo")
+
+    @say_yo.before_loop
+    async def before_say_yo(self):
+        """Wait until the bot logs in"""
+        await self.wait_until_ready()
+
+    async def reply_yo(self, channel, _payload):
+        """Reply with 'yo'"""
+        await channel.send("yo")
 
     async def ping(self, channel, _payload):
         """Sends pong"""
