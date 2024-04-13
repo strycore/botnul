@@ -1,4 +1,5 @@
 """Bot discord de yishan"""
+
 import os
 import re
 import logging
@@ -12,18 +13,17 @@ import urbandictionary as ud
 from quote import QUOTES  # quotes personnelles
 
 logging.basicConfig(level=logging.DEBUG)
-LOGGER = logging.getLogger('discord')
+LOGGER = logging.getLogger("discord")
 LOGGER.setLevel(logging.INFO)
 MESSAGE_LOGGER = logging.getLogger(__name__)
-MESSAGE_HANDLER = logging.FileHandler('devnull.log')
+MESSAGE_HANDLER = logging.FileHandler("devnull.log")
 MESSAGE_LOGGER.addHandler(MESSAGE_HANDLER)
 
 load_dotenv()
+BOT_NAME = "Botnul"
 TOKEN = os.getenv("DISCORD_TOKEN")
-MAIN_ID = 449724925725376513
-CENSORED_SENTENCES = (
-    "ta gueule",
-)
+MAIN_ID = 844786390578233357
+CENSORED_SENTENCES = ("ta gueule",)
 
 CENSORED_WORDS = (
     "tg",
@@ -32,45 +32,49 @@ CENSORED_WORDS = (
 )
 
 
-
 class BotClient(discord.Client):
     """Discord bot client"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # self.say_yo.start()
 
     async def on_ready(self):
         """The Discord client is ready"""
         game = discord.Game("Au nom de la lune, je vais tous vous punir.")
         await self.change_presence(status=discord.Status.online, activity=game)
+        await self.say_yo.start()
 
     async def on_message(self, message):
         """Handle received messages"""
         bot_commands = {
-            # "!ping": self.ping,
-            # "!urban": self.urbandef,
-            # "!echo": self.echo,
-            # "!help": self.rtfm,
-            # "!rtfm": self.rtfm,
-            # "!quote": self.show_random_quote
-            # "yo": self.reply_yo
+            "!ping": self.ping,
+            "!urban": self.urbandef,
+            "!echo": self.echo,
+            "!help": self.rtfm,
+            "!rtfm": self.rtfm,
+            "!quote": self.show_random_quote,
+            "!podcast": self.show_podcast_quote,
+            "yo": self.reply_yo,
         }
+        if message.author == self.user:
+            return
         MESSAGE_LOGGER.info("%s: %s", message, message.content)
-        print(message)
-        words = re.findall(r'\w+', message.content)
+        words = re.findall(r"\w+", message.content)
         if not words:
             return
         sentence = message.content.strip().lower()
-        # if sentence in CENSORED_SENTENCES:
-        #     await message.delete()
-        #     return
-        # for word in words:
-        #     if word in CENSORED_WORDS:
-        #         await message.delete()
-        #         return
+        if sentence in CENSORED_SENTENCES:
+            await message.delete()
+            return
+        for word in words:
+            if word in CENSORED_WORDS:
+                await message.delete()
+                return
         command = message.content.split()[0]
         if command in bot_commands:
-            await bot_commands[command](message.channel, message.content[len(command) + 1:])
+            await bot_commands[command](
+                message.channel, message.content[len(command) + 1 :]
+            )
 
     @tasks.loop(hours=24)
     async def say_yo(self):
@@ -109,7 +113,7 @@ class BotClient(discord.Client):
 
         embed.add_field(name="**definition** :\n", value=concat, inline=False)
         embed.add_field(name="**example** :\n", value=response.example)
-        embed.set_thumbnail(url="https://share.yishan.io/images/ud.jpg")
+        # embed.set_thumbnail(url="https://share.yishan.io/images/ud.jpg")
         await channel.send(embed=embed)
 
     async def echo(self, channel, phrase):
@@ -120,13 +124,34 @@ class BotClient(discord.Client):
         """Balance une quote random"""
         quote = random.choice(QUOTES)
         embed = discord.Embed(title="Quote", description=quote, color=0x0392E1)
-        embed.set_thumbnail(url="https://share.yishan.io/images/quote.png")
+        # embed.set_thumbnail(url="https://share.yishan.io/images/quote.png")
         await channel.send(embed=embed)
+
+    async def show_podcast_quote(self, channel, _data):
+        def random_line(afile):
+            line = next(afile)
+            consume_next = False
+            for num, aline in enumerate(afile, 2):
+                if consume_next:
+                    consume_next -= 1
+                    line = line + " " + aline
+                    continue
+                if random.randrange(num):
+                    continue
+                line = aline
+                consume_next = 3
+            return line
+
+        podcast_file = open("podcast.txt")
+        await channel.send(random_line(podcast_file))
 
     async def rtfm(self, channel, _payload):
         """Fuck you"""
         await channel.send("RTFM!")
 
 
-DISCORD_NUL_BOT = BotClient()
+intents = discord.Intents.default()
+intents.message_content = True
+
+DISCORD_NUL_BOT = BotClient(intents=intents)
 DISCORD_NUL_BOT.run(TOKEN)
