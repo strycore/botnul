@@ -1,8 +1,8 @@
 import json
 
-user_id = 285507337479782411
+user_id = 163337434090831872
 backup_filename = "backup-home.json"
-dest_filename = "quotes-nuggets.txt"
+dest_filename = "quotes-syntax.txt"
 
 with open(backup_filename) as backup_file:
     messages = json.load(backup_file)

@@ -1,4 +1,3 @@
-import sys
 import json
 
 from urllib.request import urlopen
@@ -39,7 +38,7 @@ def _parse_urban_json(json, check_result=True):
         return result
     for definition in json['list']:
         d = UrbanDefinition(
-                definition['word'], 
+                definition['word'],
                 definition['definition'],
                 definition['example'],
                 int(definition['thumbs_up']),

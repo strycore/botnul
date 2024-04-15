@@ -6,9 +6,9 @@ import json
 import logging
 
 import random
-
+import requests
 import discord
-from discord.ext import commands, tasks
+from discord.ext import tasks
 from dotenv import load_dotenv
 import urbandictionary as ud
 from quote import QUOTES  # quotes personnelles
@@ -47,6 +47,7 @@ class BotClient(discord.Client):
 
     async def on_message(self, message):
         """Handle received messages"""
+        MESSAGE_LOGGER.info("%s: %s", message, message.content)
         bot_commands = {
             "!ping": self.ping,
             "!urban": self.urbandef,
@@ -57,12 +58,18 @@ class BotClient(discord.Client):
             "!strider": self.show_strider_quote,
             "!pctony": self.show_pctony_quote,
             "!nuggets": self.show_nuggets_quote,
+            "!syntax": self.show_syntax_quote,
             "!bak": self.backup_channel,
             "yo": self.reply_yo,
         }
+
         if message.author == self.user:
             return
-        MESSAGE_LOGGER.info("%s: %s", message, message.content)
+        for user in message.mentions:
+            if user == self.user:
+                await self.respond_llama(message)
+                return
+
         words = re.findall(r"\w+", message.content)
         if not words:
             return
@@ -79,6 +86,8 @@ class BotClient(discord.Client):
             await bot_commands[command](
                 message.channel, message.content[len(command) + 1 :]
             )
+            if command.startswith("!"):
+                await message.delete()
 
     @tasks.loop(hours=24)
     async def say_yo(self):
@@ -120,6 +129,25 @@ class BotClient(discord.Client):
         # embed.set_thumbnail(url="https://share.yishan.io/images/ud.jpg")
         await channel.send(embed=embed)
 
+    async def respond_llama(self, message):
+        req = requests.post(
+            "http://localhost:11434/api/chat",
+            data=json.dumps(
+                {
+                    "model": "warlox",
+                    "messages": [{"role": "user", "content": message.content}],
+                }
+            ),
+        )
+        response_text = "".join(
+            [
+                json.loads(r)["message"]["content"]
+                for r in req.content.decode().split("\n")
+                if r
+            ]
+        )
+        await message.channel.send(response_text)
+
     async def echo(self, channel, phrase):
         """Repète Jacquot"""
         await channel.send(phrase + " ducon")
@@ -146,6 +174,9 @@ class BotClient(discord.Client):
     async def show_nuggets_quote(self, channel, _data):
         await self.send_random_line(channel, "quotes-nuggets.txt", more=0)
 
+    async def show_syntax_quote(self, channel, _data):
+        await self.send_random_line(channel, "quotes-syntax.txt", more=0)
+
     async def send_random_line(self, channel, filename, more=0):
         def random_line(afile, more=0):
             line = next(afile)
@@ -171,7 +202,9 @@ class BotClient(discord.Client):
         while True:
             if current_message:
                 print(current_message.created_at)
-            async for message in channel.history(oldest_first=True, limit=100, after=current_message):
+            async for message in channel.history(
+                oldest_first=True, limit=100, after=current_message
+            ):
                 messages.append(self.serialize_message(message))
                 current_message = message
                 if message.id == last_message_id:
@@ -192,7 +225,7 @@ class BotClient(discord.Client):
             "author": {
                 "id": message.author.id,
                 "name": message.author.name,
-                "global_name": message.author.global_name
+                "global_name": message.author.global_name,
             },
             "content": message.content,
             "created_at": message.created_at.timestamp(),
@@ -205,28 +238,34 @@ class BotClient(discord.Client):
     def serialize_attachments(self, attachments):
         response = []
         for attachment in attachments:
-            response.append({
-                "id": attachment.id,
-                "description": attachment.description,
-                "duration": attachment.duration,
-                "filename": attachment.filename,
-                "url": attachment.url,
-                "height": attachment.height,
-                "width": attachment.width,
-                "size": attachment.size,
-            })
+            response.append(
+                {
+                    "id": attachment.id,
+                    "description": attachment.description,
+                    "duration": attachment.duration,
+                    "filename": attachment.filename,
+                    "url": attachment.url,
+                    "height": attachment.height,
+                    "width": attachment.width,
+                    "size": attachment.size,
+                }
+            )
         return response
 
     def serialize_embeds(self, embeds):
         response = []
         for embed in embeds:
-            response.append({
-                "type": embed.type,
-                "title": embed.title,
-                "description": embed.description,
-                "url": embed.url,
-                "timestamp": embed.timestamp.timestamp() if embed.timestamp else None,
-            })
+            response.append(
+                {
+                    "type": embed.type,
+                    "title": embed.title,
+                    "description": embed.description,
+                    "url": embed.url,
+                    "timestamp": embed.timestamp.timestamp()
+                    if embed.timestamp
+                    else None,
+                }
+            )
         return response
 
 
