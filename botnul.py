@@ -59,6 +59,7 @@ class BotClient(discord.Client):
             "!pctony": self.show_pctony_quote,
             "!nuggets": self.show_nuggets_quote,
             "!syntax": self.show_syntax_quote,
+            "!lya": self.show_lya_quote,
             "!bak": self.backup_channel,
             "yo": self.reply_yo,
         }
@@ -134,7 +135,7 @@ class BotClient(discord.Client):
             "http://localhost:11434/api/chat",
             data=json.dumps(
                 {
-                    "model": "warlox",
+                    "model": "llama3",
                     "messages": [{"role": "user", "content": message.content}],
                 }
             ),
@@ -160,22 +161,25 @@ class BotClient(discord.Client):
         await channel.send(embed=embed)
 
     async def show_podcast_quote(self, channel, _data):
-        await self.send_random_line(channel, "podcast.txt", more=3)
+        await self.send_random_line(channel, "quotes/podcast.txt", more=3)
 
     async def show_yishan_quote(self, channel, _data):
-        await self.send_random_line(channel, "quotes-yishan.txt", more=0)
+        await self.send_random_line(channel, "quotes/yishan.txt", more=0)
 
     async def show_strider_quote(self, channel, _data):
-        await self.send_random_line(channel, "quotes-strider.txt", more=0)
+        await self.send_random_line(channel, "quotes/strider.txt", more=0)
 
     async def show_pctony_quote(self, channel, _data):
-        await self.send_random_line(channel, "quotes-pctony.txt", more=0)
+        await self.send_random_line(channel, "quotes/pctony.txt", more=0)
 
     async def show_nuggets_quote(self, channel, _data):
-        await self.send_random_line(channel, "quotes-nuggets.txt", more=0)
+        await self.send_random_line(channel, "quotes/nuggets.txt", more=0)
 
     async def show_syntax_quote(self, channel, _data):
-        await self.send_random_line(channel, "quotes-syntax.txt", more=0)
+        await self.send_random_line(channel, "quotes/syntax.txt", more=0)
+
+    async def show_lya_quote(self, channel, _data):
+        await self.send_random_line(channel, "quotes/lya.txt", more=0)
 
     async def send_random_line(self, channel, filename, more=0):
         def random_line(afile, more=0):
@@ -212,7 +216,7 @@ class BotClient(discord.Client):
 
     async def backup_channel(self, channel, _data):
         messages = await self.retrieve_all_messages(channel)
-        with open(f"backup-{channel.name}.json", "w") as backup_file:
+        with open(f"exports/json/backup-{channel.name}.json", "w") as backup_file:
             json.dump(messages, backup_file, indent=2)
 
     def serialize_message(self, message):
